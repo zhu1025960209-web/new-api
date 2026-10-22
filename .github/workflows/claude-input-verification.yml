@@ -1,0 +1,37 @@
+name: Claude input usage - Ubuntu verification
+on:
+  push:
+    branches: [ci/claude-stream-input-verification]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GOWORK: 'off'
+    steps:
+      - name: Checkout exact two-file patch commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: 51986f9371d9c5c4c63578c8d34e09798c74e6d4
+      - name: Set up project Go version
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            relaykit/go.sum
+            tokenkit/go.sum
+      - name: Frontend embed placeholder for backend tests
+        run: mkdir -p web/dist && touch web/dist/index.html
+      - name: Toolchain
+        run: go version
+      - name: Full root test suite
+        run: go test ./... -count=1
+      - name: Full relaykit test suite
+        working-directory: relaykit
+        run: go test ./... -count=1
+      - name: Full tokenkit test suite
+        working-directory: tokenkit
+        run: go test ./... -count=1
